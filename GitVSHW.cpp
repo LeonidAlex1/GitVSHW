@@ -86,4 +86,11 @@ public:
 };
 
 
-
+int main() {
+    Library lib;
+    lib.addBook("1984", "George Orwell", "Dystopian", 1949, true, 4.5);
+    lib.addBook("Brave New World", "Aldous Huxley", "Dystopian", 1932, false, 4.2);
+    lib.displayBooks();
+    lib.saveToFile("library_data.txt");
+    return 0;
+}
