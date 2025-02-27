@@ -17,80 +17,140 @@ struct Book {
     double rating;
 };
 
+struct BorrowedBook {
+    int bookId;
+    string borrower;
+    string borrowDate;
+    string returnDate;
+    string condition;
+};
+
 class Library {
 private:
     vector<Book> books;
+    vector<BorrowedBook> borrowedBooks;
     int nextId;
 
 public:
     Library() : nextId(1) {}
 
-    void addBook(const string& title, const string& author, const string& genre, int year, bool available, double rating) {
+    void addBook() {
+        string title, author, genre;
+        int year;
+        double rating;
+        bool available = true;
+
+        cout << "Enter title: "; cin.ignore(); getline(cin, title);
+        cout << "Enter author: "; getline(cin, author);
+        cout << "Enter genre: "; getline(cin, genre);
+        cout << "Enter year: "; cin >> year;
+        cout << "Enter rating: "; cin >> rating;
+
         books.push_back({ nextId++, title, author, genre, year, available, rating });
     }
 
-    void removeBook(int id) {
+    void removeBook() {
+        int id;
+        cout << "Enter book ID to remove: "; cin >> id;
         books.erase(remove_if(books.begin(), books.end(), [id](const Book& b) { return b.id == id; }), books.end());
     }
 
-    void updateBook(int id, const string& title, const string& author, const string& genre, int year, bool available, double rating) {
+    void updateBook() {
+        int id;
+        cout << "Enter book ID to update: "; cin >> id;
         for (auto& book : books) {
             if (book.id == id) {
-                book.title = title;
-                book.author = author;
-                book.genre = genre;
-                book.year = year;
-                book.available = available;
-                book.rating = rating;
-                break;
+                cout << "Enter new title: "; cin.ignore(); getline(cin, book.title);
+                cout << "Enter new author: "; getline(cin, book.author);
+                cout << "Enter new genre: "; getline(cin, book.genre);
+                cout << "Enter new year: "; cin >> book.year;
+                cout << "Enter new rating: "; cin >> book.rating;
+                return;
             }
         }
+        cout << "Book not found\n";
     }
-
 
     void displayBooks() {
         for (const auto& book : books) {
             cout << "ID: " << book.id << " Title: " << book.title << " Author: " << book.author
                 << " Genre: " << book.genre << " Year: " << book.year << " Available: "
-                << (book.available ? "Yes" : "No") << " Rating: " << book.rating << endl;
+                << (book.available ? "Yes" : "No") << " Rating: " << book.rating << "\n";
         }
     }
 
-    void saveToFile(const string& filename) {
-        ofstream file(filename);
-        for (const auto& book : books) {
-            file << book.id << "," << book.title << "," << book.author << "," << book.genre << ","
-                << book.year << "," << book.available << "," << book.rating << endl;
+    void borrowBook() {
+        int id;
+        string borrower, borrowDate;
+        cout << "Enter book ID to borrow: "; cin >> id;
+        cout << "Enter borrower name: "; cin.ignore(); getline(cin, borrower);
+        cout << "Enter borrow date: "; getline(cin, borrowDate);
+
+        for (auto& book : books) {
+            if (book.id == id && book.available) {
+                book.available = false;
+                borrowedBooks.push_back({ id, borrower, borrowDate, "", "" });
+                cout << "Book borrowed successfully\n";
+                return;
+            }
         }
+        cout << "Book not available\n";
     }
 
-    void loadFromFile(const string& filename) {
-        ifstream file(filename);
-        string line;
-        while (getline(file, line)) {
-            stringstream ss(line);
-            Book book;
-            string available;
-            getline(ss, line, ','); book.id = stoi(line);
-            getline(ss, book.title, ',');
-            getline(ss, book.author, ',');
-            getline(ss, book.genre, ',');
-            getline(ss, line, ','); book.year = stoi(line);
-            getline(ss, available, ','); book.available = (available == "1");
-            getline(ss, line, ','); book.rating = stod(line);
-            books.push_back(book);
+    void returnBook() {
+        int id;
+        string returnDate, condition;
+        cout << "Enter book ID to return: "; cin >> id;
+        cout << "Enter return date: "; cin.ignore(); getline(cin, returnDate);
+        cout << "Enter book condition: "; getline(cin, condition);
+
+        for (auto& borrow : borrowedBooks) {
+            if (borrow.bookId == id && borrow.returnDate.empty()) {
+                borrow.returnDate = returnDate;
+                borrow.condition = condition;
+
+                for (auto& book : books) {
+                    if (book.id == id) {
+                        book.available = true;
+                        break;
+                    }
+                }
+                cout << "Book returned successfully\n";
+                return;
+            }
         }
+        cout << "Borrowed record not found\n";
     }
 
-
+    void menu() {
+        int choice;
+        do {
+            cout << "\nLibrary Management System\n";
+            cout << "1. Add Book\n";
+            cout << "2. Remove Book\n";
+            cout << "3. Update Book\n";
+            cout << "4. Display Books\n";
+            cout << "5. Borrow Book\n";
+            cout << "6. Return Book\n";
+            cout << "7. Exit\n";
+            cout << "Enter your choice: ";
+            cin >> choice;
+            switch (choice) {
+            case 1: addBook(); break;
+            case 2: removeBook(); break;
+            case 3: updateBook(); break;
+            case 4: displayBooks(); break;
+            case 5: borrowBook(); break;
+            case 6: returnBook(); break;
+            case 7: break;
+            default: cout << "Invalid choice\n";
+            }
+        } while (choice != 7);
+    }
 };
-
 
 int main() {
     Library lib;
-    lib.addBook("1984", "George Orwell", "Dystopian", 1949, true, 4.5);
-    lib.addBook("Brave New World", "Aldous Huxley", "Dystopian", 1932, false, 4.2);
-    lib.displayBooks();
-    lib.saveToFile("library_data.txt");
+    lib.menu();
     return 0;
 }
