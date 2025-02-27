@@ -48,10 +48,42 @@ public:
     }
 
 
+    void displayBooks() {
+        for (const auto& book : books) {
+            cout << "ID: " << book.id << " Title: " << book.title << " Author: " << book.author
+                << " Genre: " << book.genre << " Year: " << book.year << " Available: "
+                << (book.available ? "Yes" : "No") << " Rating: " << book.rating << endl;
+        }
+    }
 
+    void saveToFile(const string& filename) {
+        ofstream file(filename);
+        for (const auto& book : books) {
+            file << book.id << "," << book.title << "," << book.author << "," << book.genre << ","
+                << book.year << "," << book.available << "," << book.rating << endl;
+        }
+    }
 
-
-
+    void loadFromFile(const string& filename) {
+        ifstream file(filename);
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            Book book;
+            string available;
+            getline(ss, line, ','); book.id = stoi(line);
+            getline(ss, book.title, ',');
+            getline(ss, book.author, ',');
+            getline(ss, book.genre, ',');
+            getline(ss, line, ','); book.year = stoi(line);
+            getline(ss, available, ','); book.available = (available == "1");
+            getline(ss, line, ','); book.rating = stod(line);
+            books.push_back(book);
+        }
+    }
 
 
 };
+
+
+
