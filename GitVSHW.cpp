@@ -7,7 +7,6 @@
 
 using namespace std;
 
-// Structure to represent a user
 struct User {
     string login;
     string password;
@@ -16,7 +15,6 @@ struct User {
     string phone;
 };
 
-// Structure to represent a test
 struct Test {
     string category;
     string name;
@@ -24,7 +22,6 @@ struct Test {
     vector<string> answers;
 };
 
-// Structure to represent a test result
 struct TestResult {
     string userLogin;
     string testName;
@@ -33,20 +30,15 @@ struct TestResult {
     double score;
 };
 
-// Map to store users
 map<string, User> users;
 
-// Map to store tests
 map<string, Test> tests;
 
-// Map to store test results
 map<string, vector<TestResult>> testResults;
 
-// Admin login and password
 string adminLogin = "";
 string adminPassword = "";
 
-// Function to register a new user
 void registerUser() {
     User user;
     cout << "Enter your name: ";
@@ -60,7 +52,6 @@ void registerUser() {
     cout << "Enter your password: ";
     cin >> user.password;
 
-    // Check if the login is already taken
     if (users.find(user.login) != users.end()) {
         cout << "Login is already taken. Please choose another one.\n";
         return;
@@ -70,7 +61,6 @@ void registerUser() {
     cout << "Registration successful!\n";
 }
 
-// Function to login a user
 void loginUser() {
     string login, password;
     cout << "Enter your login: ";
@@ -78,7 +68,6 @@ void loginUser() {
     cout << "Enter your password: ";
     cin >> password;
 
-    // Check if the user exists and the password is correct
     if (users.find(login) == users.end() || users[login].password != password) {
         cout << "Invalid login or password.\n";
         return;
@@ -87,13 +76,11 @@ void loginUser() {
     cout << "Login successful!\n";
 }
 
-// Function to take a test
 void takeTest() {
     string userLogin;
     cout << "Enter your login: ";
     cin >> userLogin;
 
-    // Check if the user exists
     if (users.find(userLogin) == users.end()) {
         cout << "User not found.\n";
         return;
@@ -118,7 +105,6 @@ void takeTest() {
         return;
     }
 
-    // Check if the test exists
     if (tests.find(testName) == tests.end()) {
         cout << "Test not found.\n";
         return;
@@ -127,7 +113,6 @@ void takeTest() {
     Test test = tests[testName];
     int correctAnswers = 0;
 
-    // Ask the user the questions and check the answers
     for (int i = 0; i < test.questions.size(); i++) {
         string answer;
         cout << "Question " << i + 1 << ": " << test.questions[i] << "\n";
@@ -138,10 +123,8 @@ void takeTest() {
         }
     }
 
-    // Calculate the score
     double score = (double)correctAnswers / test.questions.size() * 100;
 
-    // Save the test result
     TestResult result;
     result.userLogin = userLogin;
     result.testName = testName;
@@ -153,19 +136,16 @@ void takeTest() {
     cout << "Test completed! Your score is " << score << "%\n";
 }
 
-// Function to view test results
 void viewTestResults() {
     string userLogin;
     cout << "Enter the login of the user: ";
     cin >> userLogin;
 
-    // Check if the user exists
     if (testResults.find(userLogin) == testResults.end()) {
         cout << "No test results found for this user.\n";
         return;
     }
 
-    // Display the test results
     for (TestResult result : testResults[userLogin]) {
         cout << "Test Name: " << result.testName << "\n";
         cout << "Correct Answers: " << result.correctAnswers << "\n";
@@ -174,11 +154,17 @@ void viewTestResults() {
     }
 }
 
-// Function to manage users
 void manageUsers() {
+    cout << "-----------------------------------------------\n";
+    cout << "              Manage Users Menu              \n";
+    cout << "-----------------------------------------------\n";
     cout << "1. Create user\n";
     cout << "2. Delete user\n";
     cout << "3. Modify user\n";
+    cout << "4. Change user login and password\n";
+    cout << "5. Back\n";
+    cout << "-----------------------------------------------\n";
+
     int choice;
     cin >> choice;
 
@@ -187,17 +173,18 @@ void manageUsers() {
         registerUser();
         break;
     case 2:
-        // Delete user
         break;
     case 3:
-        // Modify user
         break;
+    case 4:
+        break;
+    case 5:
+        return;
     default:
         cout << "Invalid choice.\n";
     }
 }
 
-// Function to add a test
 void addTest() {
     Test test;
     cout << "Enter the category of the test: ";
@@ -205,7 +192,6 @@ void addTest() {
     cout << "Enter the name of the test: ";
     cin >> test.name;
 
-    // Add questions and answers to the test
     int numQuestions;
     cout << "Enter the number of questions: ";
     cin >> numQuestions;
@@ -223,30 +209,72 @@ void addTest() {
     cout << "Test added successfully!\n";
 }
 
-// Function to view statistics
 void viewStatistics() {
+    cout << "-----------------------------------------------\n";
+    cout << "              View Statistics Menu            \n";
+    cout << "-----------------------------------------------\n";
     cout << "1. View statistics by category\n";
     cout << "2. View statistics by test\n";
     cout << "3. View statistics by user\n";
+    cout << "4. Back\n";
+    cout << "-----------------------------------------------\n";
+
     int choice;
     cin >> choice;
 
     switch (choice) {
     case 1:
-        // View statistics by category
+        for (auto& test : tests) {
+            int totalCorrectAnswers = 0;
+            int totalQuestions = 0;
+            for (auto& result : testResults) {
+                for (auto& testResult : result.second) {
+                    if (testResult.testName == test.first) {
+                        totalCorrectAnswers += testResult.correctAnswers;
+                        totalQuestions += testResult.totalQuestions;
+                    }
+                }
+            }
+            double averageScore = (double)totalCorrectAnswers / totalQuestions * 100;
+            cout << "Category: " << test.second.category << "\n";
+            cout << "Average Score: " << averageScore << "%\n";
+        }
         break;
     case 2:
-        // View statistics by test
+        for (auto& test : tests) {
+            int totalCorrectAnswers = 0;
+            int totalQuestions = 0;
+            for (auto& result : testResults) {
+                for (auto& testResult : result.second) {
+                    if (testResult.testName == test.first) {
+                        totalCorrectAnswers += testResult.correctAnswers;
+                        totalQuestions += testResult.totalQuestions;
+                    }
+                }
+            }
+            double averageScore = (double)totalCorrectAnswers / totalQuestions * 100;
+            cout << "Test Name: " << test.first << "\n";
+            cout << "Average Score: " << averageScore << "%\n";
+        }
         break;
     case 3:
-        // View statistics by user
+        string userLogin;
+        cout << "Enter the login of the user: ";
+        cin >> userLogin;
+        for (auto& result : testResults[userLogin]) {
+            cout << "Test Name: " << result.testName << "\n";
+            cout << "Correct Answers: " << result.correctAnswers << "\n";
+            cout << "Total Questions: " << result.totalQuestions << "\n";
+            cout << "Score: " << result.score << "%\n";
+        }
         break;
+    case 4:
+        return;
     default:
         cout << "Invalid choice.\n";
     }
 }
 
-// Function to change admin login and password
 void changeAdminLoginAndPassword() {
     string newLogin, newPassword;
     cout << "Enter new login: ";
@@ -259,9 +287,26 @@ void changeAdminLoginAndPassword() {
     cout << "Admin login and password changed successfully!\n";
 }
 
-// Function to generate questions for math and history tests
+void changeUserLoginAndPassword() {
+    string userLogin, newLogin, newPassword;
+    cout << "Enter the login of the user: ";
+    cin >> userLogin;
+    cout << "Enter new login: ";
+    cin >> newLogin;
+    cout << "Enter new password: ";
+    cin >> newPassword;
+
+    if (users.find(userLogin) == users.end()) {
+        cout << "User not found.\n";
+        return;
+    }
+
+    users[userLogin].login = newLogin;
+    users[userLogin].password = newPassword;
+    cout << "User login and password changed successfully!\n";
+}
+
 void generateQuestions() {
-    // Math questions
     Test mathTest;
     mathTest.category = "Math";
     mathTest.name = "Math Test";
@@ -273,7 +318,6 @@ void generateQuestions() {
     mathTest.answers.push_back("18");
     tests[mathTest.name] = mathTest;
 
-    // History questions
     Test historyTest;
     historyTest.category = "History";
     historyTest.name = "History Test";
@@ -297,9 +341,14 @@ int main() {
     }
 
     while (true) {
+        cout << "-----------------------------------------------\n";
+        cout << "              Main Menu                      \n";
+        cout << "-----------------------------------------------\n";
         cout << "1. Login as admin\n";
         cout << "2. Login as user\n";
         cout << "3. Exit\n";
+        cout << "-----------------------------------------------\n";
+
         int choice;
         cin >> choice;
 
@@ -315,11 +364,15 @@ int main() {
                 cout << "Login successful!\n";
 
                 while (true) {
+                    cout << "-----------------------------------------------\n";
+                    cout << "              Admin Menu                     \n";
+                    cout << "-----------------------------------------------\n";
                     cout << "1. Manage users\n";
-                    cout << "2. Add test\n";
-                    cout << "3. View statistics\n";
-                    cout << "4. Change admin login and password\n";
-                    cout << "5. Exit\n";
+                    cout << "2. View statistics\n";
+                    cout << "3. Change login and password\n";
+                    cout << "4. Back\n";
+                    cout << "-----------------------------------------------\n";
+
                     int adminChoice;
                     cin >> adminChoice;
 
@@ -328,15 +381,34 @@ int main() {
                         manageUsers();
                         break;
                     case 2:
-                        addTest();
-                        break;
-                    case 3:
                         viewStatistics();
                         break;
-                    case 4:
-                        changeAdminLoginAndPassword();
+                    case 3:
+                        cout << "-----------------------------------------------\n";
+                        cout << "              Change Login and Password Menu  \n";
+                        cout << "-----------------------------------------------\n";
+                        cout << "1. Change admin login and password\n";
+                        cout << "2. Change user login and password\n";
+                        cout << "3. Back\n";
+                        cout << "-----------------------------------------------\n";
+
+                        int changeChoice;
+                        cin >> changeChoice;
+
+                        switch (changeChoice) {
+                        case 1:
+                            changeAdminLoginAndPassword();
+                            break;
+                        case 2:
+                            changeUserLoginAndPassword();
+                            break;
+                        case 3:
+                            return;
+                        default:
+                            cout << "Invalid choice.\n";
+                        }
                         break;
-                    case 5:
+                    case 4:
                         return 0;
                     default:
                         cout << "Invalid choice.\n";
@@ -349,11 +421,16 @@ int main() {
             break;
         }
         case 2: {
+            cout << "-----------------------------------------------\n";
+            cout << "              User Menu                      \n";
+            cout << "-----------------------------------------------\n";
             cout << "1. Register\n";
             cout << "2. Login\n";
             cout << "3. Take test\n";
             cout << "4. View test results\n";
-            cout << "5. Exit\n";
+            cout << "5. Back\n";
+            cout << "-----------------------------------------------\n";
+
             int userChoice;
             cin >> userChoice;
 
