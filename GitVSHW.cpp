@@ -1,80 +1,78 @@
 #include <iostream>
-#include <vector>
+#include <fstream>
 #include <list>
 #include <map>
 #include <algorithm>
-#include <fstream>
-#include <sstream>
+#include <functional>
+#include <stdexcept>
+#include <string>
+#include <limits>
 
 using namespace std;
 
+class InvalidPriceException : public exception {
+public:
+    const char* what() const throw() {
+        return "Invalid price";
+    }
+};
+
 class Entity {
 public:
-    virtual void display() const = 0;
-    virtual ~Entity() {}
+    virtual void print() const = 0;
 };
 
 class Product : public Entity {
-public:
+private:
     string name;
     double price;
 
-    Product(const string& name, double price) {
-        if (price < 0) throw invalid_argument("Price cannot be negative");
-        this->name = name;
-        this->price = price;
+public:
+    Product(const string& name, double price) : name(name), price(price) {
+        if (price < 0) {
+            throw InvalidPriceException();
+        }
     }
 
-    void display() const override {
+    string getName() const {
+        return name;
+    }
+
+    double getPrice() const {
+        return price;
+    }
+
+    void print() const override {
         cout << "Product: " << name << ", Price: " << price << "\n";
     }
 };
 
 class Store : public Entity {
-public:
+private:
     string name;
-    map<string, Product> products;
+    list<Product> products;
 
-    Store(const string& name) : name(name) {}
+public:
+    Store() : name(""), products() {}
 
-    void addProduct(const string& productName, double price) {
-        products[productName] = Product(productName, price);
+    Store(const string& name) : name(name), products() {}
+
+    void addProduct(const Product& product) {
+        products.push_back(product);
     }
 
-    bool hasProduct(const string& productName) const {
-        return products.find(productName) != products.end();
+    list<Product> getProducts() const {
+        return products;
     }
 
-    double getProductPrice(const string& productName) const {
-        if (!hasProduct(productName)) throw runtime_error("Product not found");
-        return products.at(productName).price;
+    string getName() const {
+        return name;
     }
 
-    void display() const override {
-        cout << "Store: " << name << "\nProducts:\n";
-        for (const auto& item : products) {
-            item.second.display();
-        }
-    }
-
-    void saveToFile(ofstream& outFile) const {
-        outFile << name << "\n";
-        outFile << products.size() << "\n";
-        for (const auto& item : products) {
-            outFile << item.second.name << " " << item.second.price << "\n";
-        }
-    }
-
-    void loadFromFile(ifstream& inFile) {
-        int productCount;
-        inFile >> productCount;
-        inFile.ignore();
-
-        for (int i = 0; i < productCount; i++) {
-            string productName;
-            double productPrice;
-            inFile >> productName >> productPrice;
-            addProduct(productName, productPrice);
+    void print() const override {
+        cout << "Store: " << name << "\n";
+        for (const auto& product : products) {
+            product.print();
         }
     }
 };
@@ -82,95 +80,247 @@ public:
 template <typename T>
 class Network {
 private:
-    list<shared_ptr<T>> stores;
+    list<T> stores;
+
 public:
-    void addStore(const string& name) {
-        stores.push_back(make_shared<T>(name));
+    void addStore(const T& store) {
+        stores.push_back(store);
     }
 
-    shared_ptr<T> findCheapestStore(const string& productName) {
-        auto it = min_element(stores.begin(), stores.end(), [&productName](const shared_ptr<T>& a, const shared_ptr<T>& b) {
-            bool hasA = a->hasProduct(productName);
-            bool hasB = b->hasProduct(productName);
-            if (!hasA) return false;
-            if (!hasB) return true;
-            return a->getProductPrice(productName) < b->getProductPrice(productName);
-            });
-        return (it != stores.end() && (*it)->hasProduct(productName)) ? *it : nullptr;
+    list<T> getStores() const {
+        return stores;
     }
 
-    void displayAllStores() const {
+    T findCheapestStore(const string& productName) const {
+        T cheapestStore;
+        double minPrice = numeric_limits<double>::max();
+
         for (const auto& store : stores) {
-            store->display();
+            for (const auto& product : store.getProducts()) {
+                if (product.getName() == productName && product.getPrice() < minPrice) {
+                    minPrice = product.getPrice();
+                    cheapestStore = store;
+                }
+            }
         }
+
+        return cheapestStore;
     }
 
-    void saveToFile(const string& filePath) const {
-        ofstream outFile(filePath);
-        if (!outFile) {
-            cout << "Error: Unable to open file for saving." << "\n";
-            return;
-        }
-        outFile << stores.size() << "\n";
+    void print() const {
         for (const auto& store : stores) {
-            store->saveToFile(outFile);
+            store.print();
         }
-        outFile.close();
-    }
-
- /*   void saveToFile(const string& filename, const string& stationName, const Date& date, const string& fuelType, int amount, const string& action) const {
-        ofstream file(filename, ios::app);
-        file << "Station: " << stationName << " | Date: " << date << " | Action: " << action << " | Fuel: " << fuelType << " | Quantity: " << amount << " liters\n";
-    }*/
-
-
-    void loadFromFile(const string& filePath) {
-        ifstream inFile(filePath);
-        if (!inFile) {
-            cout << "Error: Unable to open file for loading." << "\n";
-            return;
-        }
-        int storeCount;
-        inFile >> storeCount;
-        inFile.ignore();
-
-        stores.clear();
-
-        for (int i = 0; i < storeCount; i++) {
-            string storeName;
-            getline(inFile, storeName);
-            shared_ptr<T> store = make_shared<T>(storeName);
-            store->loadFromFile(inFile);
-            stores.push_back(store);
-        }
-        inFile.close();
     }
 };
 
+bool compareStores(const Store& store1, const Store& store2) {
+    return store1.getProducts().size() > store2.getProducts().size();
+}
+
+int countProducts(const Network<Store>& network) {
+    int count = 0;
+    for (const auto& store : network.getStores()) {
+        count += store.getProducts().size();
+    }
+    return count;
+}
+
+list<Product> filterProducts(const Store& store, double minPrice, double maxPrice) {
+    list<Product> filteredProducts;
+    for (const auto& product : store.getProducts()) {
+        if (product.getPrice() >= minPrice && product.getPrice() <= maxPrice) {
+            filteredProducts.push_back(product);
+        }
+    }
+    return filteredProducts;
+}
+
+void saveNetwork(const Network<Store>& network, const string& filename) {
+    ofstream file(filename);
+    if (file.is_open()) {
+        for (const auto& store : network.getStores()) {
+            file << "Store: " << store.getName() << "\n";
+            for (const auto& product : store.getProducts()) {
+                file << "Product: " << product.getName() << ", Price: " << product.getPrice() << "\n";
+            }
+            file << "\n";
+        }
+        file.close();
+    }
+    else {
+        cout << "Unable to open file\n";
+    }
+}
+
+void loadNetwork(Network<Store>& network, const string& filename) {
+    ifstream file(filename);
+    if (file.is_open()) {
+        string line;
+        Store store;
+        while (getline(file, line)) {
+            if (line.find("Store:") != string::npos) {
+                store = Store(line.substr(7));
+            }
+            else if (line.find("Product:") != string::npos) {
+                size_t commaPos = line.find(", Price:");
+                string productName = line.substr(9, commaPos - 9);
+                double price = stod(line.substr(commaPos + 8));
+                store.addProduct(Product(productName, price));
+            }
+            else if (line.empty()) {
+                network.addStore(store);
+            }
+        }
+        file.close();
+    }
+    else {
+        cout << "Unable to open file\n";
+    }
+}
+
 int main() {
-    Network<Store> storeNetwork;
-    storeNetwork.addStore("TechWorld");
-    storeNetwork.addStore("GadgetHub");
+    Network<Store> network;
+    string filename = "D:\\MYSTAT\\testing1.txt";
+    ifstream file;
 
-    auto techWorld = storeNetwork.findCheapestStore("TechWorld");
-    if (techWorld) {
-        techWorld->addProduct("Laptop", 999.99);
-        techWorld->addProduct("Smartphone", 599.99);
+    loadNetwork(network, filename);
+
+    while (true) {
+        cout << "-----------------------------------------------\n";
+        cout << "              Store Management System          \n";
+        cout << "-----------------------------------------------\n";
+        cout << "1. Add store\n";
+        cout << "2. Add product to store\n";
+        cout << "3. Find cheapest store for product\n";
+        cout << "4. Print all stores and products\n";
+        cout << "5. Compare two stores by number of products\n";
+        cout << "6. Count number of products in all stores\n";
+        cout << "7. Filter products by price range\n";
+        cout << "8. Save and view network data\n";
+        cout << "9. Exit\n";
+        cout << "-----------------------------------------------\n";
+
+        int choice;
+        cin >> choice;
+
+        switch (choice) {
+        case 1: {
+            string storeName;
+            cout << "Enter store name: ";
+            cin >> storeName;
+            Store store(storeName);
+            network.addStore(store);
+            break;
+        }
+        case 2: {
+            string storeName;
+            cout << "Enter store name: ";
+            cin >> storeName;
+            string productName;
+            double price;
+            cout << "Enter product name: ";
+            cin >> productName;
+            cout << "Enter product price: ";
+            cin >> price;
+            for (auto& store : network.getStores()) {
+                if (store.getName() == storeName) {
+                    store.addProduct(Product(productName, price));
+                    break;
+                }
+            }
+            break;
+        }
+        case 3: {
+            string productName;
+            cout << "Enter product name: ";
+            cin >> productName;
+            Store cheapestStore = network.findCheapestStore(productName);
+            cheapestStore.print();
+            break;
+        }
+        case 4:
+            for (const auto& store : network.getStores()) {
+                cout << "-----------------------------------------------\n";
+                cout << "Store: " << store.getName() << "\n";
+                cout << "-----------------------------------------------\n";
+                for (const auto& product : store.getProducts()) {
+                    cout << "Product: " << product.getName() << ", Price: " << product.getPrice() << "\n";
+                }
+                cout << "\n";
+            }
+            
+            break;
+        case 5: {
+            string storeName1;
+            cout << "Enter first store name: ";
+            cin >> storeName1;
+            string storeName2;
+            cout << "Enter second store name: ";
+            cin >> storeName2;
+            Store store1;
+            Store store2;
+            for (const auto& store : network.getStores()) {
+                if (store.getName() == storeName1) {
+                    store1 = store;
+                }
+                else if (store.getName() == storeName2) {
+                    store2 = store;
+                }
+            }
+            if (compareStores(store1, store2)) {
+                cout << storeName1 << " has more products than " << storeName2 << "\n";
+            }
+            else {
+                cout << storeName2 << " has more products than " << storeName1 << "\n";
+            }
+            break;
+        }
+        case 6:
+            cout << "Total number of products: " << countProducts(network) << "\n";
+            break;
+        case 7: {
+            string storeName;
+            cout << "Enter store name: ";
+            cin >> storeName;
+            double minPrice;
+            double maxPrice;
+            cout << "Enter minimum price: ";
+            cin >> minPrice;
+            cout << "Enter maximum price: ";
+            cin >> maxPrice;
+            for (const auto& store : network.getStores()) {
+                if (store.getName() == storeName) {
+                    list<Product> filteredProducts = filterProducts(store, minPrice, maxPrice);
+                    for (const auto& product : filteredProducts) {
+                        product.print();
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+        case 8:
+            saveNetwork(network, filename);
+            file.open(filename);
+            if (file.is_open()) {
+                string line;
+                while (getline(file, line)) {
+                    cout << line << "\n";
+                }
+                file.close();
+            }
+            else {
+                cout << "Unable to open file\n";
+            }
+            break;
+        case 9:
+            saveNetwork(network, filename);
+            return 0;
+        default:
+            cout << "Invalid choice\n";
+        }
     }
-
-    auto gadgetHub = storeNetwork.findCheapestStore("GadgetHub");
-    if (gadgetHub) {
-        gadgetHub->addProduct("Laptop", 899.99);
-        gadgetHub->addProduct("Smartwatch", 299.99);
-    }
-
-    string filePath = "D:\\MYSTAT\\testing1.txt";
-    storeNetwork.saveToFile(filePath);
-
-    storeNetwork.loadFromFile(filePath);
-
-    cout << "\nAll stores after loading from file:\n";
-    storeNetwork.displayAllStores();
 
     return 0;
 }
