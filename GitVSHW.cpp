@@ -131,7 +131,7 @@ void takeTest() {
     result.correctAnswers = correctAnswers;
     result.totalQuestions = test.questions.size();
     result.score = score;
-    testResults[result.userLogin].push_back(result);
+    testResults[userLogin].push_back(result);
 
     cout << "Test completed! Your score is " << score << "%\n";
 }
@@ -213,10 +213,8 @@ void viewStatistics() {
     cout << "-----------------------------------------------\n";
     cout << "              View Statistics Menu            \n";
     cout << "-----------------------------------------------\n";
-    cout << "1. View statistics by category\n";
-    cout << "2. View statistics by test\n";
-    cout << "3. View statistics by user\n";
-    cout << "4. Back\n";
+    cout << "1. View statistics by test\n";
+    cout << "2. Back\n";
     cout << "-----------------------------------------------\n";
 
     int choice;
@@ -236,39 +234,11 @@ void viewStatistics() {
                 }
             }
             double averageScore = (double)totalCorrectAnswers / totalQuestions * 100;
-            cout << "Category: " << test.second.category << "\n";
-            cout << "Average Score: " << averageScore << "%\n";
-        }
-        break;
-    case 2:
-        for (auto& test : tests) {
-            int totalCorrectAnswers = 0;
-            int totalQuestions = 0;
-            for (auto& result : testResults) {
-                for (auto& testResult : result.second) {
-                    if (testResult.testName == test.first) {
-                        totalCorrectAnswers += testResult.correctAnswers;
-                        totalQuestions += testResult.totalQuestions;
-                    }
-                }
-            }
-            double averageScore = (double)totalCorrectAnswers / totalQuestions * 100;
             cout << "Test Name: " << test.first << "\n";
             cout << "Average Score: " << averageScore << "%\n";
         }
         break;
-    case 3:
-        string userLogin;
-        cout << "Enter the login of the user: ";
-        cin >> userLogin;
-        for (auto& result : testResults[userLogin]) {
-            cout << "Test Name: " << result.testName << "\n";
-            cout << "Correct Answers: " << result.correctAnswers << "\n";
-            cout << "Total Questions: " << result.totalQuestions << "\n";
-            cout << "Score: " << result.score << "%\n";
-        }
-        break;
-    case 4:
+    case 2:
         return;
     default:
         cout << "Invalid choice.\n";
