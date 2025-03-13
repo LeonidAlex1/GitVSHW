@@ -61,21 +61,6 @@ void registerUser() {
     cout << "Registration successful!\n";
 }
 
-void loginUser() {
-    string login, password;
-    cout << "Enter your login: ";
-    cin >> login;
-    cout << "Enter your password: ";
-    cin >> password;
-
-    if (users.find(login) == users.end() || users[login].password != password) {
-        cout << "Invalid login or password.\n";
-        return;
-    }
-
-    cout << "Login successful!\n";
-}
-
 void takeTest() {
     string userLogin;
     cout << "Enter your login: ";
@@ -154,37 +139,6 @@ void viewTestResults() {
     }
 }
 
-void manageUsers() {
-    cout << "-----------------------------------------------\n";
-    cout << "              Manage Users Menu              \n";
-    cout << "-----------------------------------------------\n";
-    cout << "1. Create user\n";
-    cout << "2. Delete user\n";
-    cout << "3. Modify user\n";
-    cout << "4. Change user login and password\n";
-    cout << "5. Back\n";
-    cout << "-----------------------------------------------\n";
-
-    int choice;
-    cin >> choice;
-
-    switch (choice) {
-    case 1:
-        registerUser();
-        break;
-    case 2:
-        break;
-    case 3:
-        break;
-    case 4:
-        break;
-    case 5:
-        return;
-    default:
-        cout << "Invalid choice.\n";
-    }
-}
-
 void addTest() {
     Test test;
     cout << "Enter the category of the test: ";
@@ -214,7 +168,7 @@ void viewStatistics() {
     cout << "              View Statistics Menu            \n";
     cout << "-----------------------------------------------\n";
     cout << "1. View statistics by test\n";
-    cout << "2. Back\n";
+    cout << "2. Exit\n";
     cout << "-----------------------------------------------\n";
 
     int choice;
@@ -274,6 +228,77 @@ void changeUserLoginAndPassword() {
     users[userLogin].login = newLogin;
     users[userLogin].password = newPassword;
     cout << "User login and password changed successfully!\n";
+}
+
+void deleteUser();
+void modifyUser();
+
+void manageUsers() {
+    cout << "-----------------------------------------------\n";
+    cout << "              Manage Users Menu              \n";
+    cout << "-----------------------------------------------\n";
+    cout << "1. Create user\n";
+    cout << "2. Delete user\n";
+    cout << "3. Modify user\n";
+    cout << "4. Exit\n";
+    cout << "-----------------------------------------------\n";
+
+    int choice;
+    cin >> choice;
+
+    switch (choice) {
+    case 1:
+        registerUser();
+        break;
+    case 2:
+        deleteUser();
+        break;
+    case 3:
+        modifyUser();
+        break;
+    case 4:
+        return;
+    default:
+        cout << "Invalid choice.\n";
+    }
+}
+
+void deleteUser() {
+    string userLogin;
+    cout << "Enter the login of the user to delete: ";
+    cin >> userLogin;
+
+    if (users.find(userLogin) == users.end()) {
+        cout << "User not found.\n";
+        return;
+    }
+
+    users.erase(userLogin);
+    cout << "User deleted successfully!\n";
+}
+
+void modifyUser() {
+    string userLogin;
+    cout << "Enter the login of the user to modify: ";
+    cin >> userLogin;
+
+    if (users.find(userLogin) == users.end()) {
+        cout << "User not found.\n";
+        return;
+    }
+
+    cout << "Enter new name: ";
+    cin >> users[userLogin].name;
+    cout << "Enter new address: ";
+    cin >> users[userLogin].address;
+    cout << "Enter new phone number: ";
+    cin >> users[userLogin].phone;
+    cout << "Enter new login: ";
+    cin >> users[userLogin].login;
+    cout << "Enter new password: ";
+    cin >> users[userLogin].password;
+
+    cout << "User modified successfully!\n";
 }
 
 void generateQuestions() {
@@ -340,7 +365,7 @@ int main() {
                     cout << "1. Manage users\n";
                     cout << "2. View statistics\n";
                     cout << "3. Change login and password\n";
-                    cout << "4. Back\n";
+                    cout << "4. Exit\n";
                     cout << "-----------------------------------------------\n";
 
                     int adminChoice;
@@ -359,7 +384,7 @@ int main() {
                         cout << "-----------------------------------------------\n";
                         cout << "1. Change admin login and password\n";
                         cout << "2. Change user login and password\n";
-                        cout << "3. Back\n";
+                        cout << "3. Exit\n";
                         cout << "-----------------------------------------------\n";
 
                         int changeChoice;
@@ -395,10 +420,9 @@ int main() {
             cout << "              User Menu                      \n";
             cout << "-----------------------------------------------\n";
             cout << "1. Register\n";
-            cout << "2. Login\n";
-            cout << "3. Take test\n";
-            cout << "4. View test results\n";
-            cout << "5. Back\n";
+            cout << "2. Take test\n";
+            cout << "3. View test results\n";
+            cout << "4. Exit\n";
             cout << "-----------------------------------------------\n";
 
             int userChoice;
@@ -409,15 +433,12 @@ int main() {
                 registerUser();
                 break;
             case 2:
-                loginUser();
-                break;
-            case 3:
                 takeTest();
                 break;
-            case 4:
+            case 3:
                 viewTestResults();
                 break;
-            case 5:
+            case 4:
                 return 0;
             default:
                 cout << "Invalid choice.\n";
